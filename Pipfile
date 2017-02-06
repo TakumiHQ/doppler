@@ -1,0 +1,10 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+
+[packages]
+redis = "==2.10.5"
+Flask = "==0.12"
+rpqueue = "==0.26.0"
+requests = "==2.13.0"
+gunicorn = "==19.6.0"

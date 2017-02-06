@@ -1,0 +1,21 @@
+{
+    "default": {
+        "Flask": "0.12",
+        "rpqueue": "0.26.0",
+        "requests": "2.13.0",
+        "redis": "2.10.5"
+    },
+    "develop": {},
+    "_meta": {
+        "sources": [
+            {
+                "url": "https://pypi.python.org/simple",
+                "verify_ssl": true
+            }
+        ],
+        "requires": {},
+        "hash": {
+            "sha256": "5bd3991f3c5a9db0654b5c3706f9ce408d6e9bea5905d80dd6a9675c158bef5c"
+        }
+    }
+}
