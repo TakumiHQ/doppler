@@ -88,7 +88,7 @@ Here are the attributes available on jobs
 ```json
 {
   "request_id": "9cbb9962-585a-4240-82a5-ab2537a0fb1b",
-  "status": 'early',
+  "status": "early",
   "run_at": 1486412420,
   "scheduled_at": 1486412420,
   "last_retry": null,
