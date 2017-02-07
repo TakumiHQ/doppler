@@ -40,7 +40,7 @@ def _get_delay():
     run_at = request.json['run_at']
     if run_at is None:
         return None
-    seconds = time.time() - run_at
+    seconds = run_at - time.time()
     return max(0, int(seconds))
 
 
