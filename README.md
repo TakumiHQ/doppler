@@ -1,6 +1,7 @@
-![Doppler](https://cdn.rawgit.com/TakumiHQ/doppler/master/logo.svg)
+![Doppler](https://s3-eu-west-1.amazonaws.com/app-static.takumi.com/Doppler.svg)
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+[![Build Status](https://travis-ci.org/TakumiHQ/doppler.svg?branch=master)](https://travis-ci.org/TakumiHQ/doppler)
 
 Doppler helps you delay actions to a set moment in time. The Doppler way to
 achieve the delay is to expose Flask endpoints as callback hooks that will be
