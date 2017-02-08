@@ -21,10 +21,9 @@
     }
   },
   "addons": [
-    "openredis",
+    "heroku-redis",
     {
-      "plan": "mongolab:shared-single-small",
-      "as": "MONGO"
+      "plan": "heroku-redis:hobby-dev"
     }
   ],
   "buildpacks": [
