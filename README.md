@@ -1,4 +1,4 @@
-[Imgur](http://i.imgur.com/S4755pO.png)
+![Doppler](https://raw.githubusercontent.com/TakumiHQ/doppler/master/logo.svg)
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
