@@ -92,14 +92,14 @@ def post_job():
 def get_job(request_id):
     job = _get_job(request_id)
     status = job.status
+    run_at = None
     scheduled_at = None
     last_retry = None
     retries_left = 0
-    delay = 0
 
     if status != "done":
         args = json.loads(job.args)
-        taskid, fname, args, kwargs, delay = args
+        taskid, fname, args, kwargs, run_at = args
         scheduled_at = kwargs['scheduled_at']
         last_retry = kwargs.get('last_retry')
         retries_left = kwargs['_attempts']
@@ -107,7 +107,7 @@ def get_job(request_id):
     return jsonify({
         'request_id': request_id,
         'status': status,
-        'run_at': int(delay + time.time()),
+        'run_at': run_at,
         'scheduled_at': scheduled_at,
         'last_retry': last_retry,
         'retries_left': retries_left,
