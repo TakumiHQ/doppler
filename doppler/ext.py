@@ -2,11 +2,10 @@ import time
 import inspect
 import datetime as dt
 import functools
-
-from simplejson import JSONDecodeError
+import json
 
 import requests
-from flask import Blueprint, json, request, url_for, abort
+from flask import Blueprint, request, url_for, abort
 from werkzeug.contrib.securecookie import SecureCookie
 
 
@@ -33,7 +32,7 @@ class Signer(object):
     def unsign(self, data):
         try:
             return dict(JSONSecureCookie.unserialize(data, self.secret_key))
-        except JSONDecodeError:
+        except ValueError:
             raise UnsignError
 
 
@@ -53,7 +52,7 @@ class NoSigner(object):
     def unsign(self, data):
         try:
             return json.loads(data)
-        except JSONDecodeError:
+        except ValueError:
             raise UnsignError
 
 
