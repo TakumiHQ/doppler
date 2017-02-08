@@ -1,10 +1,17 @@
 import time
+import inspect
 import datetime as dt
 import functools
 
+from simplejson import JSONDecodeError
+
 import requests
-from flask import Blueprint, json, request, url_for
+from flask import Blueprint, json, request, url_for, abort
 from werkzeug.contrib.securecookie import SecureCookie
+
+
+class UnsignError(Exception):
+    pass
 
 
 class JSONSecureCookie(SecureCookie):
@@ -20,22 +27,30 @@ class Signer(object):
         return JSONSecureCookie(data, self.secret_key).serialize()
 
     def unsign(self, data):
-        return dict(JSONSecureCookie.unserialize(data, self.secret_key))
+        try:
+            return dict(JSONSecureCookie.unserialize(data, self.secret_key))
+        except JSONDecodeError:
+            raise UnsignError
 
 
-def seconds_to_epoch(seconds):
-    if isinstance(seconds, dt.datetime):
-        seconds = time.mktime(seconds.timetuple())
-    return int(time.time() - seconds)
+def seconds_to_epoch(subject):
+    if isinstance(subject, dt.datetime):
+        subject = subject - dt.datetime.now(subject.tzinfo)
+    if isinstance(subject, dt.timedelta):
+        subject = int(round(subject.total_seconds()))
+    return int(time.time() + subject)
 
 
 class NoSigner(object):
 
-    def serialize(self, data):
-        return data
+    def sign(self, data):
+        return json.dumps(data)
 
-    def unserialize(self, data):
-        return data
+    def unsign(self, data):
+        try:
+            return json.loads(data)
+        except JSONDecodeError:
+            raise UnsignError
 
 
 class Job(object):
@@ -46,9 +61,11 @@ class Job(object):
             setattr(self, key, item)
 
     def cancel(self):
+        """ Returns boolean to indicate if job was found and deleted (`True`) or
+        not found and will not run (`False`). """
         response = requests.delete(self.doppler.url + '/{}'.format(self.request_id))
         response.raise_for_status()
-        return response.json()
+        return response.json()['was_cancelled']
 
     def refresh(self):
         response = requests.get(self.doppler.url + '/{}'.format(self.request_id))
@@ -64,15 +81,18 @@ class Callback(object):
         self.max_retries = max_retries
         self.retry_delay = retry_delay
 
+    @property
+    def url(self):
+        return url_for('{}.{}'.format(
+            self.doppler.blueprint.name,
+            self.fn.__name__,
+        ), _external=True)
+
     def delay(self, seconds, **arguments):
         signed_data = self.doppler.signer.sign(arguments)
-        callback_url = url_for('{}.{}'.format(
-            self.doppler.blueprint.name,
-            self.fn.__name__
-        ), _external=True)
         response = requests.post(self.doppler.url, json={
             'message': signed_data,
-            'callback_url': callback_url,
+            'callback_url': self.url,
             'max_retries': self.max_retries,
             'retry_delay': self.retry_delay,
             'run_at': seconds_to_epoch(seconds),
@@ -86,10 +106,23 @@ class Callback(object):
 
 class Doppler(object):
 
-    def __init__(self, url, app=None):
-        self.url = url.rstrip('/')
+    def __init__(self, url=None, app=None):
         self.blueprint = Blueprint('doppler', __name__)
+        self.set_url(url)
         self._signer = None
+
+    def set_url(self, url):
+        if url is not None:
+            self._url = url.rstrip('/')
+        else:
+            self._url = None
+
+    @property
+    def url(self):
+        if self._url is None:
+            raise RuntimeError(u'No Doppler service URL set. Set at Doppler '
+                               u'init or via `register`')
+        return self._url
 
     @property
     def signer(self):
@@ -106,16 +139,21 @@ class Doppler(object):
         else:
             return Signer(self.app.secret_key)
 
-    def unsign_request_data(self, data):
-        if not data:
-            return u'Not supported', 415
-        return self.signer.unsign(data)
+    def get_arguments(self, data):
+        try:
+            return self.signer.unsign(data)
+        except UnsignError:
+            abort(400)
 
     def listen(self, route, max_retries=0, retry_delay=10, **kwargs):
         def decorator(f):
             @functools.wraps(f)
             def inner(*args, **kwargs):
-                arguments = self.unsign_request_data(request.data)
+                arguments = self.get_arguments(request.data)
+                # Do not accept webhooks without required arguments
+                for f_argument in inspect.getargspec(f).args:
+                    if f_argument not in arguments:
+                        abort(400)
                 return f(**arguments)
             self.blueprint.add_url_rule(route, inner.__name__, inner, methods=['POST'], **kwargs)
             return Callback(self, inner, max_retries, retry_delay)
@@ -128,6 +166,11 @@ class Doppler(object):
         response.raise_for_status()
         return Job(self, **response.json())
 
-    def register(self, app, url_prefix='/_callbacks'):
+    def register(self, app, doppler_url=None, url_prefix='/_callbacks'):
         self.app = app
+        if doppler_url is not None:
+            self._url = self.set_url(doppler_url)
+        elif self._url is None:
+            raise RuntimeError(u'No Doppler service URL set. Set at Doppler '
+                               u'init or via `register`')
         app.register_blueprint(self.blueprint, url_prefix=url_prefix)
