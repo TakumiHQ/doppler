@@ -3,3 +3,5 @@ rpqueue==0.26.0
 requests==2.13.0
 redis==2.10.5
 gunicorn==19.6.0
+raven==5.32.0
+blinker==1.4

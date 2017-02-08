@@ -1,5 +1,6 @@
 # encoding=utf-8
 
+import os
 import time
 import urlparse
 import uuid
@@ -7,6 +8,12 @@ import uuid
 from flask import Flask, abort, request, jsonify, json
 
 from doppler.queue import callback, rpqueue
+
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+
+if SENTRY_DSN:
+    from raven.contrib.flask import Sentry
+    sentry = Sentry(dsn=SENTRY_DSN)
 
 
 def _get_job(request_id):
@@ -116,6 +123,8 @@ def delete_job(request_id):
 
 def get_service_app():
     app = Flask(__name__)
+    if SENTRY_DSN:
+        sentry.init_app(app)
     app.add_url_rule('/', 'post_job', post_job, methods=['POST'])
     app.add_url_rule('/<request_id>', 'get_job', get_job)
     app.add_url_rule('/<request_id>', 'delete_job', delete_job, methods=['DELETE'])
