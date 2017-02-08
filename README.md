@@ -1,4 +1,4 @@
-![Doppler](https://raw.githubusercontent.com/TakumiHQ/doppler/master/logo.svg)
+![Doppler](https://cdn.rawgit.com/TakumiHQ/doppler/master/logo.svg)
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
