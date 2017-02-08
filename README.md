@@ -1,4 +1,6 @@
-# Doppler
+[Imgur](http://i.imgur.com/S4755pO.png)
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 Doppler helps you delay actions to a set moment in time. The Doppler way to
 achieve the delay is to expose Flask endpoints as callback hooks that will be

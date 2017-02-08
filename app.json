@@ -1,0 +1,35 @@
+{
+  "name": "Doppler",
+  "description": "setTimeout but for REST API's.",
+  "keywords": [
+    "webhooks",
+    "REST",
+    "Flask",
+    "redis"
+  ],
+  "website": "https://github.com/TakumiHQ/doppler",
+  "repository": "https://github.com/TakumiHQ/doppler",
+  "logo": "http://i.imgur.com/S4755pO.png",
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "standard-1x"
+    },
+    "worker": {
+      "quantity": 1,
+      "size": "standard-1x"
+    }
+  },
+  "addons": [
+    "openredis",
+    {
+      "plan": "mongolab:shared-single-small",
+      "as": "MONGO"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
