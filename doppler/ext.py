@@ -14,6 +14,10 @@ class UnsignError(Exception):
     pass
 
 
+class ArgumentMismatchError(Exception):
+    pass
+
+
 class JSONSecureCookie(SecureCookie):
     serialization_method = json
 
@@ -75,11 +79,12 @@ class Job(object):
 
 
 class Callback(object):
-    def __init__(self, doppler, fn, max_retries, retry_delay):
+    def __init__(self, doppler, fn, max_retries, retry_delay, _inner):
         self.doppler = doppler
         self.fn = fn
         self.max_retries = max_retries
         self.retry_delay = retry_delay
+        self._inner = _inner
 
     @property
     def url(self):
@@ -88,7 +93,15 @@ class Callback(object):
             self.fn.__name__,
         ), _external=True)
 
+    def _validate_callback_argument_list(self, arguments):
+        function_args = set(inspect.getargspec(self._inner).args)
+        delay_args = set(arguments.keys())
+        if function_args != delay_args:
+            raise ArgumentMismatchError()
+
     def delay(self, seconds, **arguments):
+        self._validate_callback_argument_list(arguments)
+
         signed_data = self.doppler.signer.sign(arguments)
         response = requests.post(self.doppler.url, json={
             'message': signed_data,
@@ -143,7 +156,7 @@ class Doppler(object):
         try:
             return self.signer.unsign(data)
         except UnsignError:
-            abort(400)
+            abort(400, u'Unsign error')
 
     def listen(self, route, max_retries=0, retry_delay=10, **kwargs):
         def decorator(f):
@@ -153,10 +166,10 @@ class Doppler(object):
                 # Do not accept webhooks without required arguments
                 for f_argument in inspect.getargspec(f).args:
                     if f_argument not in arguments:
-                        abort(400)
+                        abort(400, u'Argument mismatch')
                 return f(**arguments)
             self.blueprint.add_url_rule(route, inner.__name__, inner, methods=['POST'], **kwargs)
-            return Callback(self, inner, max_retries, retry_delay)
+            return Callback(self, inner, max_retries, retry_delay, _inner=f)
         return decorator
 
     def get_job(self, request_id):
@@ -169,7 +182,7 @@ class Doppler(object):
     def register(self, app, doppler_url=None, url_prefix='/_callbacks'):
         self.app = app
         if doppler_url is not None:
-            self._url = self.set_url(doppler_url)
+            self.set_url(doppler_url)
         elif self._url is None:
             raise RuntimeError(u'No Doppler service URL set. Set at Doppler '
                                u'init or via `register`')

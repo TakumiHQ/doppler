@@ -4,7 +4,13 @@ import pytest
 import mock
 import flask
 
-from doppler.ext import NoSigner, Signer, Doppler, seconds_to_epoch
+from doppler.ext import (
+    ArgumentMismatchError,
+    Doppler,
+    NoSigner,
+    Signer,
+    seconds_to_epoch,
+)
 
 
 def test_signer_signature():
@@ -124,3 +130,9 @@ def test_seconds_to_epoch_convert_timedelta():
 
 def test_seconds_to_epoch_convert_seconds():
     assert seconds_to_epoch(10) == int(time.time()) + 10
+
+
+def test_validate_callback_argument_list():
+    doppler, app, callback = get_registered_doppler_and_app()
+    with pytest.raises(ArgumentMismatchError):
+        callback._validate_callback_argument_list({'bar': 'bar', 'norf': 'norf'})
