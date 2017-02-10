@@ -1,17 +1,19 @@
-![Doppler](https://s3-eu-west-1.amazonaws.com/app-static.takumi.com/Doppler.svg)
+<p align="center">
+  <img style="max-width:50%;" src="https://s3-eu-west-1.amazonaws.com/app-static.takumi.com/Doppler.svg">
+</p>
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-[![Build Status](https://travis-ci.org/TakumiHQ/doppler.svg?branch=master)](https://travis-ci.org/TakumiHQ/doppler)
+# Doppler [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy) [![Build Status](https://travis-ci.org/TakumiHQ/doppler.svg?branch=master)](https://travis-ci.org/TakumiHQ/doppler)
 
-Doppler helps you delay actions to a set moment in time. The Doppler way to
-achieve the delay is to expose Flask endpoints as callback hooks that will be
-triggered in the future.
+# Intro
 
-Doppler supplies three tools to this end:
+Doppler helps you schedule HTTP callbacks with retries. Callbacks are HTTP POST
+and a Flask helper takes care of signing and unsigning payloads.
 
-1. Flask helper to decorate callback endpoints
-2. Queue worker to trigger callback requests
-3. HTTP Server to receive delay requests, cancellations and introspection
+There are three components to Doppler
+
+1. Flask helper to define webhook endpoitns and and schedule callbacks
+2. Queue worker to trigger callback requests at the right time
+3. REST service to accept delay requests, cancellations and job introspection
 
 ## One Liner
 
@@ -22,7 +24,7 @@ is how you would trigger it in 3 hours:
 remind_user.delay(60 * 60 * 3, user_id='foo', message='Don’t forget to buy milk')
 ```
 
-## Safety and Accuracy
+## Accuracy
 
 The Doppler server uses rpqueue and redis to trigger callbacks. I’m not sure
 what the resolution is, but I wrote this with "minute resolution" as a goal. If
@@ -69,7 +71,7 @@ To schedule a delayed and secure request to this endpoint:
 job = expire.delay(10, id='foo')
 ```
 
-## Canceling Jobs
+### Canceling Jobs
 
 ```python
 job = expire.delay(10, id='foo')
