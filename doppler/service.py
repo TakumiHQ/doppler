@@ -97,7 +97,7 @@ def get_job(request_id):
     last_retry = None
     retries_left = 0
 
-    if status != "done":
+    if status not in ("done", "started"):
         args = json.loads(job.args)
         taskid, fname, args, kwargs, run_at = args
         scheduled_at = kwargs['scheduled_at']
